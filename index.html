@@ -84,13 +84,14 @@
     document.getElementById('startDate').valueAsDate = new Date();
 
     let currentWeek = 1;
+    let customTagsStore = JSON.parse(localStorage.getItem('custom_observation_tags') || '{}');
 
     const itemsWeek1 = [
       {
         id: "w1_1",
         title: "1. 社工與他人互動時的干擾",
         guide: "• 社工與誰互動？距離多遠？個案做什麼？\n• 是否先出現注視、靠近、敲擊？\n• 給予手語／圖卡提醒後，是否停止、等待或改用其他方式？\n• 能等待多久？行為是否再次出現？多久後恢復正常？",
-        tags: ["社工離個案 1m 內", "注視與靠近", "點頭可配合等待", "等待時間 < 1min", "等待時間 1-3min", "無法等待再次干擾"],
+        tags: ["社工離個案 1m 內", "距離個案 2m 以上", "注視與靠近", "敲擊桌面", "大聲呼喚", "點頭可配合等待", "手語圖卡提醒", "等待時間 < 1min", "等待時間 1-3min", "等待時間 > 3min", "無法等待再次干擾", "自動離去"],
         fields: [
           { label: "情境說明", placeholder: "例如：社工正與張員討論ISP計畫，距離個案約2公尺..." },
           { label: "個案反應", placeholder: "例如：給予「等待」圖卡後，個案注視圖卡約 30 秒後回到座位..." },
@@ -102,7 +103,7 @@
         id: "w1_2",
         title: "2. 社工忙碌時的注意尋求",
         guide: "• 社工忙碌時是否主動靠近、敲桌、戳碰、放物品或呼喚？\n• 給予手語／圖卡提醒、暫不立即回應後，記錄是否能等待及等待極限。\n• 是否能自行回到活動？是否再次尋求注意？",
-        tags: ["主動靠近放物品", "敲打桌子求注意", "文字提醒可等待", "自行回座位活動", "重複喚醒 3 次以上"],
+        tags: ["主動靠近放物品", "敲打桌子求注意", "拉拽衣角", "文字提醒可等待", "圖卡提醒暫止", "自行回座位活動", "重複喚醒 3 次以上", "需要2次以上提示"],
         fields: [
           { label: "情境說明", placeholder: "例如：社工正打字處理行政報表..." },
           { label: "個案反應", placeholder: "例如：敲桌2次，出示圖卡後暫止..." },
@@ -114,7 +115,7 @@
         id: "w1_3",
         title: "3. 肢體干擾他人",
         guide: "• 發生前對方做了什麼？是否與社工互動？個案距離多遠？\n• 給予圖卡提示並延遲回應，是否需要多次提醒？\n• 是否停止？停止多久？之後是否再次接近同一人？",
-        tags: ["拍打同儕肩膀", "拉拽他人衣角", "提示後立即收手", "需多次圖卡提示", "無肢體衝突"],
+        tags: ["拍打同儕肩膀", "拉拽他人衣角", "拿走他人工具", "圖卡提示後收手", "需多次圖卡提示", "無肢體衝突", "情緒激動", "冷靜後回座"],
         fields: [
           { label: "情境說明", placeholder: "例如：同儕正在收拾金紙工具箱..." },
           { label: "個案反應", placeholder: "例如：伸手欲拉同儕，提示圖卡後收手..." },
@@ -126,7 +127,7 @@
         id: "w1_4",
         title: "4. 接觸或拿取他人物品",
         guide: "• 是否先詢問？是什麼物品？是否主動前往特定位置取得？\n• 提供借用卡／手勢「先問」但暫不給予時，記錄反應。\n• 是否歸還？之後是否再次拿取？",
-        tags: ["未詢問直接拿取", "欲拿取色鉛筆/剪刀", "給予借用卡指引", "主動歸還原處", "可等待授權"],
+        tags: ["未詢問直接拿取", "欲拿取色鉛筆", "欲拿取剪刀/起子", "給予借用卡指引", "出示「先問」圖卡", "主動歸還原處", "可等待授權"],
         fields: [
           { label: "情境說明", placeholder: "例如：欲拿取鄰桌同學的繪畫色鉛筆..." },
           { label: "個案反應", placeholder: "例如：出示「先問」圖卡，個案收回手..." },
@@ -138,7 +139,7 @@
         id: "w1_5",
         title: "5. 危險工具取得或使用",
         guide: "• 是否主動尋找工具？從哪裡取得？當時情境及目的為何？\n• 發現剪刀、螺絲起子等工具時，支持者如何介入（立即收回並給予圖卡）？\n• 移除後是否再次尋找？是否轉換其他行為？",
-        tags: ["拿取剪刀/起子", "從備料區取得", "工作人員立即介入", "給予安全視覺卡", "情緒平穩轉換"],
+        tags: ["拿取剪刀/起子", "拿取美工刀", "從備料區取得", "工作人員立即介入", "給予安全視覺卡", "立即收回工具", "情緒平穩轉換", "無攻擊行為"],
         fields: [
           { label: "情境說明", placeholder: "例如：個案走到教保櫃檯旁欲拿取剪刀..." },
           { label: "安全處置", placeholder: "例如：工作人員隨即收回工具，並出示「安全規範卡」..." },
@@ -149,7 +150,7 @@
         id: "w1_6",
         title: "6. 不滿／等待時的替代表達",
         guide: "• 當她沒有得到想要的回應時，原本會做什麼？\n• 提供「等待、喝水、離開、寫字」等選項卡，看她是否能選擇。\n• 是否成功使用替代方式？需要多少提示？",
-        tags: ["選擇「喝水」選項", "選擇「寫字/塗鴉」", "選擇「短暫離座」", "需要 1 次提示", "獨立完成替代活動"],
+        tags: ["選擇「喝水」", "選擇「寫字/塗鴉」", "選擇「短暫離座」", "選擇「拼圖/繪畫」", "需要 1 次提示", "獨立完成替代活動", "無法選擇仍急躁"],
         fields: [
           { label: "情境說明", placeholder: "例如：無法立即與社工對話時顯得急躁..." },
           { label: "選擇的替代方式", placeholder: "例如：從圖卡中選擇「喝水」並前往飲水機..." },
@@ -163,7 +164,7 @@
         id: "w2_1",
         title: "1. 社工與他人互動時的干擾 (計時介入)",
         guide: "• 出示等待圖卡，並配合計時工具（如：「等藍色沙漏流完／指針到數字5」）。\n• 記錄使用計時後，個案的等待穩定度是否提升？是否減少干擾行為？",
-        tags: ["使用 3 分鐘沙漏", "使用計時器/碼錶", "定時指針約定", "完整等待至計時結束", "干擾頻率明顯下降"],
+        tags: ["使用 3 分鐘沙漏", "使用 5 分鐘計時", "使用碼錶/手機", "定時指針約定", "完整等待至計時結束", "觀看沙漏靜候", "干擾頻率明顯下降", "未達預定時間起立"],
         fields: [
           { label: "使用之計時工具", placeholder: "例如：藍色3分鐘沙漏" },
           { label: "實際等待時間", placeholder: "例如：完整等待 3 分鐘" },
@@ -174,7 +175,7 @@
         id: "w2_2",
         title: "2. 社工忙碌時的注意尋求 (計時介入)",
         guide: "• 告知「現在忙，等一下」，並指著計時器設定明確等待時間。\n• 記錄個案是否能看著計時器等待？是否能自行回到座位或活動？",
-        tags: ["設定 5 分鐘計時", "觀看計時器等待", "順利回到座位", "提示 1 次即配合", "配合度 100%"],
+        tags: ["設定 3 分鐘計時", "設定 5 分鐘計時", "觀看計時器等待", "順利回到座位", "提示 1 次即配合", "配合度 100%", "鬧鐘響後再次尋求"],
         fields: [
           { label: "設定等待時間長度", placeholder: "例如：設定 5 分鐘" },
           { label: "個案配合度", placeholder: "例如：高度配合，能看著倒數計時" },
@@ -185,7 +186,7 @@
         id: "w2_3",
         title: "3. 肢體干擾他人 (計時介入)",
         guide: "• 發生時制止並引導：「不能推，看計時器，等時間到再找人」。\n• 記錄引入計時後，個案是否較容易冷靜？是否降低再次接近同一人的衝動？",
-        tags: ["即時指引計時器", "冷靜速度加快", "肢體衝動降低", "未再接近同一人", "情緒表現平穩"],
+        tags: ["即時指引計時器", "冷靜速度加快", "肢體衝動降低", "未再接近同一人", "情緒表現平穩", "配合指引看計時"],
         fields: [
           { label: "介入情境", placeholder: "例如：欲伸手推同儕時被工作人員及時指引..." },
           { label: "計時引導反應", placeholder: "例如：看著計時器數字倒數，呼吸趨於平緩" },
@@ -196,7 +197,7 @@
         id: "w2_4",
         title: "4. 接觸或拿取他人物品 (計時介入)",
         guide: "• 提供「先問」圖卡與計時卡，引導個案「等一下、先詢問」。\n• 記錄個案是否能等待同意再拿取？是否減少未經同意直接拿取的頻率？",
-        tags: ["圖卡+計時配合", "先詢問再拿取", "直接拿取頻率降為0", "能等待同儕回應", "展現禮貌互動"],
+        tags: ["圖卡+計時配合", "先詢問再拿取", "直接拿取頻率降為0", "能等待同儕回應", "展現禮貌互動", "沙漏跑完才借用"],
         fields: [
           { label: "物品名稱", placeholder: "例如：公用作業剪刀" },
           { label: "提示與計時狀況", placeholder: "例如：引導「等沙漏跑完才可以借」，個案專注觀看沙漏" },
@@ -207,7 +208,7 @@
         id: "w2_5",
         title: "5. 危險工具取得或使用 (計時介入)",
         guide: "• 發現工具時立即移除，並配合視覺卡及短暫計時冷靜。\n• 記錄移除工具後，個案透過計時轉換注意力的效果，是否不再持續尋找？",
-        tags: ["短暫 2 分鐘計時冷靜", "注意力順利轉移", "未持續尋找工具", "冷靜卡發揮功效", "無抗拒情緒"],
+        tags: ["短暫 2 分鐘計時冷靜", "注意力順利轉移", "未持續尋找工具", "冷靜卡發揮功效", "無抗拒情緒", "轉移至打字/繪畫"],
         fields: [
           { label: "工具類型", placeholder: "例如：大型美工刀" },
           { label: "移除與計時引導", placeholder: "例如：收回美工刀，提供「計時冷靜卡」設定 2 分鐘" },
@@ -218,7 +219,7 @@
         id: "w2_6",
         title: "6. 不滿／等待時的替代表達 (計時介入)",
         guide: "• 提供替代選項（喝水、寫字等）並配合計時等待。\n• 記錄個案是否能更順暢地透過替代方式度過等待期，降低回到危險行為的機率。",
-        tags: ["替代活動+計時結合", "順利度過等待期", "情緒失控率顯著降低", "主動選取替代卡", "效果良好"],
+        tags: ["替代活動+計時結合", "順利度過等待期", "情緒失控率顯著降低", "主動選取替代卡", "效果良好", "配合計時完成"],
         fields: [
           { label: "使用的替代選項", placeholder: "例如：寫字平板 + 3分鐘計時" },
           { label: "計時配合狀況", placeholder: "例如：主動在平板寫字等待倒數計時" },
@@ -246,14 +247,25 @@
           `;
         });
 
+        // Combine default tags + custom tags
+        const userCustom = customTagsStore[item.id] || [];
+        const allTags = [...item.tags, ...userCustom];
+
         let tagsHTML = '';
-        item.tags.forEach(tag => {
+        allTags.forEach(tag => {
+          const isUserAdded = userCustom.includes(tag);
           tagsHTML += `
-            <button type="button" onclick="insertTag('${item.id}', '${tag}')" class="px-2.5 py-1 text-xs bg-slate-100 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-slate-700 dark:text-slate-300 rounded-md border border-slate-200 dark:border-slate-700 transition">
-              + ${tag}
+            <button type="button" onclick="insertTag('${item.id}', '${tag}')" class="px-2.5 py-1 text-xs ${isUserAdded ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border-amber-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'} hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-md border transition">
+              + ${tag} ${isUserAdded ? '★' : ''}
             </button>
           `;
         });
+
+        tagsHTML += `
+          <button type="button" onclick="promptAddTag('${item.id}')" class="px-2.5 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md shadow-sm transition flex items-center gap-1">
+            <span>+ 新增自訂標籤</span>
+          </button>
+        `;
 
         card.innerHTML = `
           <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 border-b border-[var(--border)] pb-3">
@@ -271,7 +283,7 @@
 
           <div>
             <label class="block text-xs font-medium text-[var(--muted-foreground)] mb-1.5">⚡ 點選速填標籤 (自動插入第一個備註欄位)：</label>
-            <div class="flex flex-wrap gap-1.5">
+            <div class="flex flex-wrap gap-1.5" id="tags_${item.id}">
               ${tagsHTML}
             </div>
           </div>
@@ -297,6 +309,21 @@
           } else {
             input.value = `【${tagText}】`;
           }
+        }
+      }
+    }
+
+    function promptAddTag(itemId) {
+      const newTag = prompt("請輸入欲新增的速填標籤名稱（例如：手語提醒、冷靜區、離座5分鐘）：");
+      if (newTag && newTag.trim()) {
+        const trimmed = newTag.trim();
+        if (!customTagsStore[itemId]) {
+          customTagsStore[itemId] = [];
+        }
+        if (!customTagsStore[itemId].includes(trimmed)) {
+          customTagsStore[itemId].push(trimmed);
+          localStorage.setItem('custom_observation_tags', JSON.stringify(customTagsStore));
+          renderForm();
         }
       }
     }
