@@ -25,7 +25,7 @@
           儲存今日紀錄至存放區
         </button>
         <button onclick="toggleHistoryDrawer()" class="px-4 py-2 border border-blue-500 text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 font-medium text-sm rounded-lg transition flex items-center gap-1.5">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
           📂 檢視歷史存放區 (<span id="historyCount">0</span>)
         </button>
         <button onclick="generateAIAnalysis()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium text-sm rounded-lg shadow transition flex items-center gap-1.5">
@@ -64,7 +64,7 @@
       </div>
     </div>
 
-    <!-- History Storage Drawer Panel (Initially Hidden) -->
+    <!-- History Storage Drawer Panel -->
     <div id="historyDrawer" class="hidden bg-[var(--card)] border border-blue-200 dark:border-blue-800 rounded-2xl p-6 shadow-md space-y-4">
       <div class="flex justify-between items-center border-b border-[var(--border)] pb-3">
         <h2 class="text-base font-bold text-[var(--foreground)] flex items-center gap-2">
@@ -121,6 +121,31 @@
       </div>
     </div>
 
+    <!-- Record Detail Preview Modal (Initially Hidden) -->
+    <div id="recordDetailModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+        <div class="p-5 border-b border-[var(--border)] flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+          <div>
+            <h3 class="text-base font-bold text-[var(--foreground)]" id="modalTitle">歷史紀錄明細觀看</h3>
+            <p class="text-xs text-[var(--muted-foreground)]" id="modalMeta"></p>
+          </div>
+          <button onclick="closeRecordDetailModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xl px-2">✕</button>
+        </div>
+
+        <div class="p-6 overflow-y-auto space-y-4 text-xs" id="modalContent">
+          <!-- Dynamic Detail Content -->
+        </div>
+
+        <div class="p-4 border-t border-[var(--border)] flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+          <span class="text-xs text-[var(--muted-foreground)]">提示：可點擊右側按鈕將此筆資料帶入下方的編輯表單</span>
+          <div class="flex gap-2">
+            <button onclick="loadRecordFromModal()" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow">帶入下方表單編輯</button>
+            <button onclick="closeRecordDetailModal()" class="px-4 py-2 border border-[var(--border)] rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">關閉視窗</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Week Selector Tabs & Add Custom Category Bar -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[var(--border)] gap-2 pb-2">
       <div class="flex space-x-2">
@@ -151,11 +176,11 @@
     document.getElementById('startDate').valueAsDate = new Date();
 
     let currentWeek = 1;
+    let activeModalRecId = null;
     let customTagsStore = JSON.parse(localStorage.getItem('custom_observation_tags') || '{}');
     let customCategoryStore = JSON.parse(localStorage.getItem('custom_observation_categories') || '[]');
     let historyRecords = JSON.parse(localStorage.getItem('observation_history_records') || '[]');
 
-    // Common co-occurring behaviors for quick tag selection
     const coOccurringQuickTags = [
       "摔籃子/甩物品", "大聲嚷嚷/抗議", "敲打桌子", "拉拽他人衣物", 
       "眼神固著注視", "拒絕配合活動轉換", "擅自離開座位", "推擠周圍同儕", "無伴隨其他干擾"
@@ -305,7 +330,6 @@
 
     function getCombinedItems(weekNum) {
       const base = weekNum === 1 ? baseItemsWeek1 : baseItemsWeek2;
-      // Add custom categories added by user
       const customAdded = customCategoryStore.map((catTitle, idx) => ({
         id: `custom_cat_${idx+1}`,
         title: `${base.length + idx + 1}. ${catTitle}`,
@@ -333,9 +357,9 @@
 
       items.forEach((item, index) => {
         const card = document.createElement('div');
+        card.id = `card_${item.id}`;
         card.className = "bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 shadow-sm space-y-4 hover:border-blue-300 dark:hover:border-blue-800 transition";
 
-        // Co-occurring tags HTML
         let coOccurHTML = '';
         coOccurringQuickTags.forEach(cTag => {
           coOccurHTML += `
@@ -345,7 +369,6 @@
           `;
         });
 
-        // Fields HTML
         let fieldsHTML = '';
         item.fields.forEach(f => {
           fieldsHTML += `
@@ -356,7 +379,6 @@
           `;
         });
 
-        // Combine default tags + custom tags
         const userCustom = customTagsStore[item.id] || [];
         const allTags = [...item.tags, ...userCustom];
 
@@ -393,7 +415,6 @@
             ${item.guide}
           </div>
 
-          <!-- Co-occurring Behaviors Row -->
           <div class="p-3 bg-rose-500/5 border border-rose-500/20 rounded-xl space-y-1.5">
             <label class="block text-xs font-bold text-rose-700 dark:text-rose-300">⚡ 同一時間伴隨發生的其他干擾行為（點選快捷帶入）：</label>
             <div class="flex flex-wrap gap-1.5">
@@ -563,13 +584,76 @@
           <td class="p-3">${rec.staffName}</td>
           <td class="p-3">${rec.filledCount} 個欄位有資料</td>
           <td class="p-3 text-slate-400">${rec.savedAt}</td>
-          <td class="p-3 text-right space-x-2">
-            <button onclick="loadHistoryRecord('${rec.id}')" class="px-2.5 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">載入查看</button>
+          <td class="p-3 text-right space-x-1.5">
+            <button onclick="openRecordDetailModal('${rec.id}')" class="px-2.5 py-1 bg-amber-500 text-white rounded hover:bg-amber-600">👁️ 快速預覽</button>
+            <button onclick="loadHistoryRecord('${rec.id}')" class="px-2.5 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">載入下方編輯</button>
             <button onclick="deleteHistoryRecord('${rec.id}')" class="px-2.5 py-1 bg-rose-100 text-rose-600 hover:bg-rose-200 rounded">刪除</button>
           </td>
         `;
         tbody.appendChild(tr);
       });
+    }
+
+    function openRecordDetailModal(recId) {
+      activeModalRecId = recId;
+      const target = historyRecords.find(r => r.id === recId);
+      if (!target) return;
+
+      document.getElementById('modalTitle').innerText = `【${target.clientName}】${target.startDate} 歷史觀察與介入紀錄明細`;
+      document.getElementById('modalMeta').innerText = `階段：第 ${target.week} 週 (${target.week === 1 ? '觀察期' : '介入期'}) ｜ 填表人：${target.staffName} ｜ 儲存時間：${target.savedAt}`;
+
+      const items = getCombinedItems(target.week);
+      let html = '';
+
+      items.forEach((item, idx) => {
+        const itemRec = target.records[item.id] || {};
+        let fieldsContent = '';
+        let hasData = false;
+
+        item.fields.forEach(f => {
+          const val = itemRec[f.label] || '';
+          if (val) hasData = true;
+          fieldsContent += `
+            <div class="bg-slate-50 dark:bg-slate-800/40 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700">
+              <span class="font-semibold text-blue-600 dark:text-blue-400 block mb-0.5">${f.label}：</span>
+              <span class="text-[var(--foreground)] whitespace-pre-line">${val || '（未填寫）'}</span>
+            </div>
+          `;
+        });
+
+        const timeStr = itemRec.time ? `⏰ 時間：${itemRec.time}` : '';
+        const coStr = itemRec.coOccur ? `⚡ 伴隨干擾：${itemRec.coOccur}` : '';
+
+        html += `
+          <div class="border border-[var(--border)] rounded-xl p-4 space-y-2 bg-[var(--card)]">
+            <div class="flex justify-between items-center border-b border-[var(--border)] pb-2 font-bold text-sm">
+              <span>${item.title}</span>
+              <div class="flex gap-3 text-xs font-normal text-rose-600 dark:text-rose-400">
+                <span>${timeStr}</span>
+                <span>${coStr}</span>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1">
+              ${fieldsContent}
+            </div>
+          </div>
+        `;
+      });
+
+      document.getElementById('modalContent').innerHTML = html;
+      document.getElementById('recordDetailModal').classList.remove('hidden');
+    }
+
+    function closeRecordDetailModal() {
+      document.getElementById('recordDetailModal').classList.add('hidden');
+      activeModalRecId = null;
+    }
+
+    function loadRecordFromModal() {
+      if (activeModalRecId) {
+        loadHistoryRecord(activeModalRecId);
+        closeRecordDetailModal();
+      }
     }
 
     function loadHistoryRecord(recId) {
@@ -601,7 +685,11 @@
             });
           }
         });
-        alert(`已載入 ${target.startDate} 【${target.clientName}】的歷史紀錄內容！`);
+
+        // Auto close history drawer & smooth scroll down to form cards
+        document.getElementById('historyDrawer').classList.add('hidden');
+        document.getElementById('formContainer').scrollIntoView({ behavior: 'smooth' });
+
       }, 100);
     }
 
@@ -648,7 +736,6 @@
       let coOccurBehaviors = [];
       let allText = JSON.stringify(dataset);
 
-      // Analyze peak time slots
       dataset.forEach(d => {
         Object.keys(d.records).forEach(k => {
           if (d.records[k].time) timeSlots.push(d.records[k].time);
