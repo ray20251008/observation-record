@@ -6,7 +6,7 @@
   <title>兩週觀察與介入期紀錄系統 + AI 智慧分析存放區</title>
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
   <style>
-    /* Custom Print CSS for Clean PDF Export */
+    /* Custom Print CSS for Clean PDF Export - Prevents Font Truncation */
     @media print {
       body {
         background: white !important;
@@ -27,6 +27,23 @@
         border: 1px solid #ccc !important;
         box-shadow: none !important;
         margin-bottom: 1rem !important;
+        padding: 1rem !important;
+      }
+
+      /* Fix Text Area Truncation / Scrollbar Clipping */
+      textarea {
+        height: auto !important;
+        max-height: none !important;
+        min-height: fit-content !important;
+        overflow: visible !important;
+        resize: none !important;
+        border: 1px solid #cbd5e1 !important;
+        background: #f8fafc !important;
+        white-space: pre-wrap !important;
+        word-break: break-word !important;
+        font-size: 12px !important;
+        line-height: 1.5 !important;
+        padding: 8px !important;
       }
     }
     .print-only-header {
@@ -41,7 +58,7 @@
     <div class="print-only-header border-b-2 border-black pb-4 mb-4">
       <div class="flex justify-between items-center">
         <div>
-          <h1 class="text-xl font-bold" id="pdfReportTitle">兩週觀察與介入期個案觀察紀錄表 (精簡報告)</h1>
+          <h1 class="text-xl font-bold" id="pdfReportTitle">兩週觀察與介入期個案觀察紀錄表 (完整報告)</h1>
           <p class="text-xs text-slate-600 mt-1" id="pdfReportMeta"></p>
         </div>
         <div class="text-right text-xs font-mono">
@@ -57,7 +74,7 @@
           <span>📋 社工/教保員 數位表單 + AI 分析中心</span>
         </div>
         <h1 class="text-2xl font-bold text-[var(--foreground)]">兩週觀察與介入期紀錄表</h1>
-        <p class="text-sm text-[var(--muted-foreground)] mt-1">同日紀錄自動整合・當日事件全景時間軸・PDF過濾匯出</p>
+        <p class="text-sm text-[var(--muted-foreground)] mt-1">同日紀錄自動整合・當日事件全景時間軸・文字防裁切PDF匯出</p>
       </div>
 
       <div class="flex flex-wrap gap-2">
@@ -77,7 +94,7 @@
           🤖 啟動 AI 分析與注意事項
         </button>
         <button onclick="exportFilteredPDF()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg shadow transition flex items-center gap-1.5">
-          📄 匯出 PDF 檔 (過濾空白，僅留紀錄)
+          📄 匯出 PDF 檔 (過濾空白，防裁切)
         </button>
       </div>
     </header>
@@ -185,7 +202,7 @@
         <div class="p-4 border-t border-[var(--border)] flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
           <span class="text-xs text-[var(--muted-foreground)]">提示：可點擊右側按鈕將此筆資料帶入下方的編輯表單</span>
           <div class="flex gap-2">
-            <button onclick="printModalOnly()" class="px-3 py-2 bg-amber-500 text-white font-medium rounded-lg hover:bg-amber-600 shadow">📄 匯出此份 PDF (過濾空白)</button>
+            <button onclick="printModalOnly()" class="px-3 py-2 bg-amber-500 text-white font-medium rounded-lg hover:bg-amber-600 shadow">📄 匯出此份 PDF (文字不裁切)</button>
             <button onclick="loadRecordFromModal()" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow">帶入下方表單編輯</button>
             <button onclick="closeRecordDetailModal()" class="px-4 py-2 border border-[var(--border)] rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">關閉視窗</button>
           </div>
@@ -423,7 +440,7 @@
           fieldsHTML += `
             <div>
               <label class="block text-xs font-semibold text-[var(--muted-foreground)] mb-1">${f.label}</label>
-              <textarea rows="2" id="${item.id}_${f.label}" placeholder="${f.placeholder}" class="w-full px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-[var(--foreground)]"></textarea>
+              <textarea rows="2" id="${item.id}_${f.label}" oninput="autoExpandTextarea(this)" placeholder="${f.placeholder}" class="w-full px-3 py-2 text-sm bg-[var(--background)] border border-[var(--border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-[var(--foreground)] transition-all"></textarea>
             </div>
           `;
         });
@@ -490,6 +507,12 @@
       updateHistoryCount();
     }
 
+    // Auto-expand Textareas when typing or inserting tags
+    function autoExpandTextarea(ta) {
+      ta.style.height = 'auto';
+      ta.style.height = (ta.scrollHeight + 6) + 'px';
+    }
+
     function insertTag(itemId, tagText) {
       const items = getCombinedItems(currentWeek);
       const targetItem = items.find(i => i.id === itemId);
@@ -502,6 +525,7 @@
           } else {
             input.value = `【${tagText}】`;
           }
+          autoExpandTextarea(input);
         }
       }
     }
@@ -703,13 +727,20 @@
       renderHistoryTable();
     }
 
+    function expandAllTextareasForPrint() {
+      document.querySelectorAll('textarea').forEach(ta => {
+        ta.style.height = 'auto';
+        ta.style.height = (ta.scrollHeight + 10) + 'px';
+      });
+    }
+
     function exportFilteredPDF() {
       const client = document.getElementById('clientName').value || '個案';
       const date = document.getElementById('startDate').value;
       const staff = document.getElementById('staffName').value || '未填寫';
       const facility = document.getElementById('facility').value;
 
-      document.getElementById('pdfReportTitle').innerText = `【${client}】${date} 兩週觀察與介入紀錄表 (精簡報告)`;
+      document.getElementById('pdfReportTitle').innerText = `【${client}】${date} 兩週觀察與介入紀錄表 (完整防裁切報告)`;
       document.getElementById('pdfReportMeta').innerText = `機構：${facility} ｜ 階段：第 ${currentWeek} 週 (${currentWeek === 1 ? '觀察期' : '介入期'}) ｜ 填表人員：${staff}`;
       document.getElementById('pdfPrintDate').innerText = new Date().toLocaleString();
 
@@ -744,10 +775,16 @@
         return;
       }
 
-      window.print();
+      // Expand all textareas dynamically so no text is truncated
+      expandAllTextareasForPrint();
+
+      setTimeout(() => {
+        window.print();
+      }, 100);
     }
 
     function printModalOnly() {
+      expandAllTextareasForPrint();
       window.print();
     }
 
@@ -820,7 +857,7 @@
           fieldsContent += `
             <div class="bg-slate-50 dark:bg-slate-800/40 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700">
               <span class="font-semibold text-blue-600 dark:text-blue-400 block mb-0.5">${f.label}：</span>
-              <span class="text-[var(--foreground)] whitespace-pre-line">${val || '（無干擾事件）'}</span>
+              <span class="text-[var(--foreground)] whitespace-pre-line leading-relaxed">${val || '（無干擾事件）'}</span>
             </div>
           `;
         });
@@ -890,7 +927,9 @@
             item.fields.forEach(f => {
               const el = document.getElementById(`${item.id}_${f.label}`);
               if (el && target.records[item.id][f.label]) {
-                el.value = target.records[item.id][f.label];
+                const ta = el;
+                ta.value = target.records[item.id][f.label];
+                autoExpandTextarea(ta);
               }
             });
           }
