@@ -16,7 +16,7 @@
           <span>📋 社工/教保員 數位表單 + AI 分析中心</span>
         </div>
         <h1 class="text-2xl font-bold text-[var(--foreground)]">兩週觀察與介入期紀錄表</h1>
-        <p class="text-sm text-[var(--muted-foreground)] mt-1">精細時間軸・伴隨干擾行為紀錄・動態自訂干擾項目・AI 智慧診斷</p>
+        <p class="text-sm text-[var(--muted-foreground)] mt-1">同日紀錄自動整合・當日事件全景時間軸・AI 智慧診斷</p>
       </div>
 
       <div class="flex flex-wrap gap-2">
@@ -25,11 +25,11 @@
           儲存今日紀錄至存放區
         </button>
         <button onclick="openLatestRecordDetailModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium text-sm rounded-lg shadow transition flex items-center gap-1.5">
-          👁️ 快速預覽最新紀錄
+          👁️ 快速預覽當日全景紀錄
         </button>
         <button onclick="toggleHistoryDrawer()" class="px-4 py-2 border border-blue-500 text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 font-medium text-sm rounded-lg transition flex items-center gap-1.5">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-          📂 檢視歷史存放區 (<span id="historyCount">0</span>)
+          📂 檢視當日/歷史存放區 (<span id="historyCount">0</span>)
         </button>
         <button onclick="generateAIAnalysis()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium text-sm rounded-lg shadow transition flex items-center gap-1.5">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
@@ -70,10 +70,13 @@
     <!-- History Storage Drawer Panel -->
     <div id="historyDrawer" class="hidden bg-[var(--card)] border border-blue-200 dark:border-blue-800 rounded-2xl p-6 shadow-md space-y-4">
       <div class="flex justify-between items-center border-b border-[var(--border)] pb-3">
-        <h2 class="text-base font-bold text-[var(--foreground)] flex items-center gap-2">
-          <span>📂 每日歷史紀錄存放區</span>
-          <span class="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 px-2.5 py-0.5 rounded-full font-normal">本機安全存儲</span>
-        </h2>
+        <div>
+          <h2 class="text-base font-bold text-[var(--foreground)] flex items-center gap-2">
+            <span>📂 當日/歷史紀錄存放區 (同日已自動整合)</span>
+            <span class="text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 px-2.5 py-0.5 rounded-full font-normal">一日一列・完整全景</span>
+          </h2>
+          <p class="text-xs text-[var(--muted-foreground)] mt-0.5">相同日期的多筆紀錄已自動合併成【當日完整時間軸報告】，不再分散多列</p>
+        </div>
         <div class="flex gap-2">
           <button onclick="exportAllHistoryJSON()" class="px-3 py-1.5 text-xs bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 border rounded-lg">匯出全部歷史 (JSON)</button>
           <button onclick="clearAllHistory()" class="px-3 py-1.5 text-xs bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 rounded-lg">清空存放區</button>
@@ -85,12 +88,12 @@
         <table class="w-full text-left text-xs">
           <thead>
             <tr class="border-b border-[var(--border)] text-[var(--muted-foreground)] bg-slate-50 dark:bg-slate-800/50">
-              <th class="p-3">日期</th>
+              <th class="p-3">紀錄日期</th>
               <th class="p-3">個案</th>
               <th class="p-3">階段週別</th>
               <th class="p-3">填表人員</th>
-              <th class="p-3">填寫完整度</th>
-              <th class="p-3">儲存時間</th>
+              <th class="p-3">當日整合項目</th>
+              <th class="p-3">最後更新時間</th>
               <th class="p-3 text-right">操作選項</th>
             </tr>
           </thead>
@@ -129,7 +132,7 @@
       <div class="bg-[var(--card)] border border-[var(--border)] rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
         <div class="p-5 border-b border-[var(--border)] flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
           <div>
-            <h3 class="text-base font-bold text-[var(--foreground)]" id="modalTitle">歷史紀錄明細觀看</h3>
+            <h3 class="text-base font-bold text-[var(--foreground)]" id="modalTitle">當日全景紀錄明細觀看</h3>
             <p class="text-xs text-[var(--muted-foreground)]" id="modalMeta"></p>
           </div>
           <button onclick="closeRecordDetailModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xl px-2">✕</button>
@@ -183,6 +186,9 @@
     let customTagsStore = JSON.parse(localStorage.getItem('custom_observation_tags') || '{}');
     let customCategoryStore = JSON.parse(localStorage.getItem('custom_observation_categories') || '[]');
     let historyRecords = JSON.parse(localStorage.getItem('observation_history_records') || '[]');
+
+    // Run auto-consolidation migration on page load so existing split entries merge into single daily entries!
+    consolidateHistoryRecords();
 
     const coOccurringQuickTags = [
       "摔籃子/甩物品", "大聲嚷嚷/抗議", "敲打桌子", "拉拽他人衣物", 
@@ -551,13 +557,115 @@
       };
     }
 
+    // Auto-consolidation migration helper
+    function consolidateHistoryRecords() {
+      const mergedMap = {};
+      const newHistory = [];
+
+      historyRecords.forEach(rec => {
+        const key = `${rec.clientName}_${rec.startDate}_w${rec.week}`;
+        if (!mergedMap[key]) {
+          mergedMap[key] = {
+            ...rec,
+            records: JSON.parse(JSON.stringify(rec.records || {}))
+          };
+          newHistory.push(mergedMap[key]);
+        } else {
+          const existing = mergedMap[key];
+          if (rec.staffName && rec.staffName !== '未填寫') existing.staffName = rec.staffName;
+
+          Object.keys(rec.records || {}).forEach(itemId => {
+            const itemData = rec.records[itemId];
+            if (!existing.records[itemId]) {
+              existing.records[itemId] = itemData;
+            } else {
+              const exItem = existing.records[itemId];
+              if (itemData.time) exItem.time = exItem.time ? `${exItem.time}, ${itemData.time}` : itemData.time;
+              if (itemData.coOccur) exItem.coOccur = exItem.coOccur ? `${exItem.coOccur}； ${itemData.coOccur}` : itemData.coOccur;
+
+              Object.keys(itemData).forEach(field => {
+                if (field !== 'time' && field !== 'coOccur' && itemData[field]) {
+                  if (exItem[field] && exItem[field] !== itemData[field]) {
+                    if (!exItem[field].includes(itemData[field])) {
+                      exItem[field] += `\n【同一日新增續記】${itemData[field]}`;
+                    }
+                  } else {
+                    exItem[field] = itemData[field];
+                  }
+                }
+              });
+            }
+          });
+
+          let fc = 0;
+          Object.keys(existing.records).forEach(k => {
+            Object.keys(existing.records[k]).forEach(f => {
+              if (existing.records[k][f] && existing.records[k][f].trim()) fc++;
+            });
+          });
+          existing.filledCount = fc;
+          existing.savedAt = rec.savedAt;
+        }
+      });
+
+      historyRecords = newHistory;
+      localStorage.setItem('observation_history_records', JSON.stringify(historyRecords));
+    }
+
     function saveCurrentRecordToHistory() {
       const current = gatherFormData();
-      historyRecords.unshift(current);
-      localStorage.setItem('observation_history_records', JSON.stringify(historyRecords));
+
+      // Check if a record already exists for the same clientName + startDate + week
+      const existingIdx = historyRecords.findIndex(r => r.clientName === current.clientName && r.startDate === current.startDate && r.week === current.week);
+
+      if (existingIdx !== -1) {
+        // Merge into existing daily record
+        const existing = historyRecords[existingIdx];
+        if (current.staffName && current.staffName !== '未填寫') existing.staffName = current.staffName;
+        existing.savedAt = current.savedAt;
+
+        Object.keys(current.records).forEach(itemId => {
+          const itemData = current.records[itemId];
+          if (!existing.records[itemId]) {
+            existing.records[itemId] = itemData;
+          } else {
+            const exItem = existing.records[itemId];
+            if (itemData.time) exItem.time = exItem.time ? `${exItem.time}, ${itemData.time}` : itemData.time;
+            if (itemData.coOccur) exItem.coOccur = exItem.coOccur ? `${exItem.coOccur}； ${itemData.coOccur}` : itemData.coOccur;
+
+            Object.keys(itemData).forEach(field => {
+              if (field !== 'time' && field !== 'coOccur' && itemData[field]) {
+                if (exItem[field] && exItem[field] !== itemData[field]) {
+                  if (!exItem[field].includes(itemData[field])) {
+                    exItem[field] += `\n【當日新增續記】${itemData[field]}`;
+                  }
+                } else {
+                  exItem[field] = itemData[field];
+                }
+              }
+            });
+          }
+        });
+
+        let fc = 0;
+        Object.keys(existing.records).forEach(k => {
+          Object.keys(existing.records[k]).forEach(f => {
+            if (existing.records[k][f] && existing.records[k][f].trim()) fc++;
+          });
+        });
+        existing.filledCount = fc;
+
+        localStorage.setItem('observation_history_records', JSON.stringify(historyRecords));
+        alert(`✅ 已將新增資料自動【整合併入】 ${current.startDate} 【${current.clientName}】的當日全景日誌中！`);
+      } else {
+        // Create new daily record
+        historyRecords.unshift(current);
+        localStorage.setItem('observation_history_records', JSON.stringify(historyRecords));
+        alert(`✅ 成功建立【${current.clientName}】於 ${current.startDate} 的第 ${current.week} 週當日紀錄檔！`);
+      }
+
       updateHistoryCount();
       renderHistoryTable();
-      alert(`✅ 成功儲存【${current.clientName}】於 ${current.startDate} 的第 ${current.week} 週紀錄！`);
     }
 
     function toggleHistoryDrawer() {
@@ -569,6 +677,7 @@
     }
 
     function renderHistoryTable() {
+      consolidateHistoryRecords();
       const tbody = document.getElementById('historyTableBody');
       tbody.innerHTML = '';
 
@@ -581,15 +690,15 @@
         const tr = document.createElement('tr');
         tr.className = "border-b border-[var(--border)] hover:bg-slate-50 dark:hover:bg-slate-800/40 transition";
         tr.innerHTML = `
-          <td class="p-3 font-semibold">${rec.startDate}</td>
-          <td class="p-3">${rec.clientName}</td>
-          <td class="p-3"><span class="px-2 py-0.5 rounded text-xs ${rec.week === 1 ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}">第 ${rec.week} 週 (${rec.week === 1 ? '觀察期' : '介入期'})</span></td>
+          <td class="p-3 font-bold text-blue-600 dark:text-blue-400">${rec.startDate}</td>
+          <td class="p-3 font-medium">${rec.clientName}</td>
+          <td class="p-3"><span class="px-2.5 py-0.5 rounded-full text-xs font-semibold ${rec.week === 1 ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300'}">第 ${rec.week} 週 (${rec.week === 1 ? '觀察期' : '介入期'})</span></td>
           <td class="p-3">${rec.staffName}</td>
-          <td class="p-3">${rec.filledCount} 個欄位有資料</td>
+          <td class="p-3 font-semibold text-emerald-600 dark:text-emerald-400">當日共整合 ${rec.filledCount} 項紀錄</td>
           <td class="p-3 text-slate-400">${rec.savedAt}</td>
           <td class="p-3 text-right space-x-1.5">
-            <button onclick="openRecordDetailModal('${rec.id}')" class="px-2.5 py-1 bg-amber-500 text-white rounded hover:bg-amber-600 shadow-sm">👁️ 快速預覽</button>
-            <button onclick="loadHistoryRecord('${rec.id}')" class="px-2.5 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">載入下方編輯</button>
+            <button onclick="openRecordDetailModal('${rec.id}')" class="px-3 py-1 bg-amber-500 text-white font-medium rounded hover:bg-amber-600 shadow-sm">👁️ 檢視當日全景</button>
+            <button onclick="loadHistoryRecord('${rec.id}')" class="px-3 py-1 bg-blue-600 text-white font-medium rounded hover:bg-blue-700">帶入下方編輯</button>
             <button onclick="deleteHistoryRecord('${rec.id}')" class="px-2.5 py-1 bg-rose-100 text-rose-600 hover:bg-rose-200 rounded">刪除</button>
           </td>
         `;
@@ -598,6 +707,7 @@
     }
 
     function openLatestRecordDetailModal() {
+      consolidateHistoryRecords();
       if (historyRecords.length === 0) {
         alert("目前歷史存放區尚無紀錄！請先點擊綠色「儲存今日紀錄至存放區」按鈕。");
         return;
@@ -610,8 +720,8 @@
       const target = historyRecords.find(r => r.id === recId);
       if (!target) return;
 
-      document.getElementById('modalTitle').innerText = `【${target.clientName}】${target.startDate} 歷史觀察與介入紀錄明細`;
-      document.getElementById('modalMeta').innerText = `階段：第 ${target.week} 週 (${target.week === 1 ? '觀察期' : '介入期'}) ｜ 填表人：${target.staffName} ｜ 儲存時間：${target.savedAt}`;
+      document.getElementById('modalTitle').innerText = `【${target.clientName}】${target.startDate} 當日全景觀察與介入時間軸日誌`;
+      document.getElementById('modalMeta').innerText = `階段：第 ${target.week} 週 (${target.week === 1 ? '觀察期' : '介入期'}) ｜ 填表人：${target.staffName} ｜ 最後更新時間：${target.savedAt}`;
 
       const items = getCombinedItems(target.week);
       let html = '';
@@ -627,19 +737,19 @@
           fieldsContent += `
             <div class="bg-slate-50 dark:bg-slate-800/40 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700">
               <span class="font-semibold text-blue-600 dark:text-blue-400 block mb-0.5">${f.label}：</span>
-              <span class="text-[var(--foreground)] whitespace-pre-line">${val || '（未填寫）'}</span>
+              <span class="text-[var(--foreground)] whitespace-pre-line">${val || '（無干擾事件）'}</span>
             </div>
           `;
         });
 
-        const timeStr = itemRec.time ? `⏰ 時間：${itemRec.time}` : '';
+        const timeStr = itemRec.time ? `⏰ 事件時間：${itemRec.time}` : '';
         const coStr = itemRec.coOccur ? `⚡ 伴隨干擾：${itemRec.coOccur}` : '';
 
         html += `
-          <div class="border border-[var(--border)] rounded-xl p-4 space-y-2 bg-[var(--card)]">
+          <div class="border border-[var(--border)] rounded-xl p-4 space-y-2 bg-[var(--card)] shadow-sm">
             <div class="flex justify-between items-center border-b border-[var(--border)] pb-2 font-bold text-sm">
-              <span>${item.title}</span>
-              <div class="flex gap-3 text-xs font-normal text-rose-600 dark:text-rose-400">
+              <span class="text-[var(--foreground)]">${item.title}</span>
+              <div class="flex gap-3 text-xs font-semibold text-rose-600 dark:text-rose-400">
                 <span>${timeStr}</span>
                 <span>${coStr}</span>
               </div>
@@ -704,7 +814,7 @@
     }
 
     function deleteHistoryRecord(recId) {
-      if (confirm('確定要刪除此筆歷史紀錄嗎？')) {
+      if (confirm('確定要刪除此筆當日紀錄檔嗎？')) {
         historyRecords = historyRecords.filter(r => r.id !== recId);
         localStorage.setItem('observation_history_records', JSON.stringify(historyRecords));
         updateHistoryCount();
@@ -733,13 +843,14 @@
 
     // AI Analysis Generator Logic
     function generateAIAnalysis() {
+      consolidateHistoryRecords();
       const clientName = document.getElementById('clientName').value || '個案';
       const clientHistory = historyRecords.filter(r => r.clientName === clientName);
       const currentData = gatherFormData();
       const dataset = clientHistory.length > 0 ? clientHistory : [currentData];
 
       document.getElementById('aiReportTitle').innerText = `【${clientName}】觀察與介入跨期 AI 診斷分析報告`;
-      document.getElementById('aiReportMeta').innerText = `分析時間：${new Date().toLocaleString()}｜分析數據筆數：${dataset.length} 筆歷史紀錄`;
+      document.getElementById('aiReportMeta').innerText = `分析時間：${new Date().toLocaleString()}｜分析數據筆數：${dataset.length} 筆當日紀錄檔`;
 
       let strategyText = "";
       let timeSlots = [];
