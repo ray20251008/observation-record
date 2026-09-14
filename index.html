@@ -6,12 +6,13 @@
   <title>兩週觀察與介入期紀錄系統 + AI 智慧分析存放區</title>
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
   <style>
-    /* Custom Print CSS for Clean PDF Export - Prevents Font Truncation */
+    /* Custom Print CSS for Clean PDF Export - Prevents Font Truncation & Modal Clipping */
     @media print {
       body {
         background: white !important;
         color: black !important;
         padding: 0 !important;
+        margin: 0 !important;
       }
       .no-print, header, .week-tabs-bar, #historyDrawer, #aiAnalysisSection, button {
         display: none !important;
@@ -45,6 +46,44 @@
         line-height: 1.5 !important;
         padding: 8px !important;
       }
+
+      /* Modal Specific Print Fixes - Removes scrollbars & modal boundaries */
+      body.printing-modal-active .max-w-6xl > *:not(#recordDetailModal) {
+        display: none !important;
+      }
+      body.printing-modal-active #recordDetailModal {
+        position: static !important;
+        display: block !important;
+        inset: auto !important;
+        background: white !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        max-height: none !important;
+        height: auto !important;
+        overflow: visible !important;
+        box-shadow: none !important;
+      }
+      body.printing-modal-active #recordDetailModal > div {
+        max-height: none !important;
+        height: auto !important;
+        overflow: visible !important;
+        border: none !important;
+        box-shadow: none !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        border-radius: 0 !important;
+      }
+      body.printing-modal-active #modalContent {
+        max-height: none !important;
+        height: auto !important;
+        overflow: visible !important;
+        padding: 0 !important;
+      }
+      body.printing-modal-active #recordDetailModal .border-t,
+      body.printing-modal-active #recordDetailModal button,
+      body.printing-modal-active #recordDetailModal .px-2 {
+        display: none !important;
+      }
     }
     .print-only-header {
       display: none;
@@ -74,7 +113,7 @@
           <span>📋 社工/教保員 數位表單 + AI 分析中心</span>
         </div>
         <h1 class="text-2xl font-bold text-[var(--foreground)]">兩週觀察與介入期紀錄表</h1>
-        <p class="text-sm text-[var(--muted-foreground)] mt-1">同日紀錄自動整合・當日事件全景時間軸・文字防裁切PDF匯出</p>
+        <p class="text-sm text-[var(--muted-foreground)] mt-1">同日紀錄自動整合・當日事件全景時間軸・無彈窗裁切PDF匯出</p>
       </div>
 
       <div class="flex flex-wrap gap-2">
@@ -94,7 +133,7 @@
           🤖 啟動 AI 分析與注意事項
         </button>
         <button onclick="exportFilteredPDF()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg shadow transition flex items-center gap-1.5">
-          📄 匯出 PDF 檔 (過濾空白，防裁切)
+          📄 匯出表單 PDF (防裁切)
         </button>
       </div>
     </header>
@@ -202,7 +241,7 @@
         <div class="p-4 border-t border-[var(--border)] flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
           <span class="text-xs text-[var(--muted-foreground)]">提示：可點擊右側按鈕將此筆資料帶入下方的編輯表單</span>
           <div class="flex gap-2">
-            <button onclick="printModalOnly()" class="px-3 py-2 bg-amber-500 text-white font-medium rounded-lg hover:bg-amber-600 shadow">📄 匯出此份 PDF (文字不裁切)</button>
+            <button onclick="printModalOnly()" class="px-3 py-2 bg-amber-500 text-white font-medium rounded-lg hover:bg-amber-600 shadow">📄 匯出此份當日全景 PDF (防裁切)</button>
             <button onclick="loadRecordFromModal()" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow">帶入下方表單編輯</button>
             <button onclick="closeRecordDetailModal()" class="px-4 py-2 border border-[var(--border)] rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">關閉視窗</button>
           </div>
@@ -507,7 +546,6 @@
       updateHistoryCount();
     }
 
-    // Auto-expand Textareas when typing or inserting tags
     function autoExpandTextarea(ta) {
       ta.style.height = 'auto';
       ta.style.height = (ta.scrollHeight + 6) + 'px';
@@ -735,6 +773,7 @@
     }
 
     function exportFilteredPDF() {
+      document.body.classList.remove('printing-modal-active');
       const client = document.getElementById('clientName').value || '個案';
       const date = document.getElementById('startDate').value;
       const staff = document.getElementById('staffName').value || '未填寫';
@@ -775,7 +814,6 @@
         return;
       }
 
-      // Expand all textareas dynamically so no text is truncated
       expandAllTextareasForPrint();
 
       setTimeout(() => {
@@ -784,9 +822,16 @@
     }
 
     function printModalOnly() {
+      document.body.classList.add('printing-modal-active');
       expandAllTextareasForPrint();
-      window.print();
+      setTimeout(() => {
+        window.print();
+      }, 100);
     }
+
+    window.addEventListener('afterprint', () => {
+      document.body.classList.remove('printing-modal-active');
+    });
 
     function toggleHistoryDrawer() {
       const drawer = document.getElementById('historyDrawer');
