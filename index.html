@@ -24,8 +24,11 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
           儲存今日紀錄至存放區
         </button>
+        <button onclick="openLatestRecordDetailModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium text-sm rounded-lg shadow transition flex items-center gap-1.5">
+          👁️ 快速預覽最新紀錄
+        </button>
         <button onclick="toggleHistoryDrawer()" class="px-4 py-2 border border-blue-500 text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 font-medium text-sm rounded-lg transition flex items-center gap-1.5">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
           📂 檢視歷史存放區 (<span id="historyCount">0</span>)
         </button>
         <button onclick="generateAIAnalysis()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium text-sm rounded-lg shadow transition flex items-center gap-1.5">
@@ -252,7 +255,7 @@
         guide: "• 當她沒有得到想要的回應時，原本會做什麼？\n• 提供「等待、喝水、離開、寫字」等選項卡，看她是否能選擇。\n• 是否成功使用替代方式？需要多少提示？",
         tags: ["選擇「喝水」", "選擇「寫字/塗鴉」", "選擇「短暫離座」", "選擇「拼圖/繪畫」", "需要 1 次提示", "獨立完成替代活動", "無法選擇仍急躁"],
         fields: [
-          { label: "情境說明", placeholder: "例如：無法立即與社工對話時顯得急躁..." },
+          { label: "情境說明", placeholder: "例如：無法指手畫腳時顯得急躁..." },
           { label: "選擇的替代方式", placeholder: "例如：從圖卡中選擇「喝水」並前往飲水機..." },
           { label: "提示需求量與成效", placeholder: "例如：口頭+圖卡 1 次提示，情緒恢復穩定" }
         ]
@@ -585,13 +588,21 @@
           <td class="p-3">${rec.filledCount} 個欄位有資料</td>
           <td class="p-3 text-slate-400">${rec.savedAt}</td>
           <td class="p-3 text-right space-x-1.5">
-            <button onclick="openRecordDetailModal('${rec.id}')" class="px-2.5 py-1 bg-amber-500 text-white rounded hover:bg-amber-600">👁️ 快速預覽</button>
+            <button onclick="openRecordDetailModal('${rec.id}')" class="px-2.5 py-1 bg-amber-500 text-white rounded hover:bg-amber-600 shadow-sm">👁️ 快速預覽</button>
             <button onclick="loadHistoryRecord('${rec.id}')" class="px-2.5 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">載入下方編輯</button>
             <button onclick="deleteHistoryRecord('${rec.id}')" class="px-2.5 py-1 bg-rose-100 text-rose-600 hover:bg-rose-200 rounded">刪除</button>
           </td>
         `;
         tbody.appendChild(tr);
       });
+    }
+
+    function openLatestRecordDetailModal() {
+      if (historyRecords.length === 0) {
+        alert("目前歷史存放區尚無紀錄！請先點擊綠色「儲存今日紀錄至存放區」按鈕。");
+        return;
+      }
+      openRecordDetailModal(historyRecords[0].id);
     }
 
     function openRecordDetailModal(recId) {
@@ -686,7 +697,6 @@
           }
         });
 
-        // Auto close history drawer & smooth scroll down to form cards
         document.getElementById('historyDrawer').classList.add('hidden');
         document.getElementById('formContainer').scrollIntoView({ behavior: 'smooth' });
 
