@@ -16,7 +16,7 @@
           <span>📋 社工/教保員 數位表單 + AI 分析中心</span>
         </div>
         <h1 class="text-2xl font-bold text-[var(--foreground)]">兩週觀察與介入期紀錄表</h1>
-        <p class="text-sm text-[var(--muted-foreground)] mt-1">結構化每日紀錄存放區・跨期趨勢統計・AI 智慧注意事項分析</p>
+        <p class="text-sm text-[var(--muted-foreground)] mt-1">精細時間軸・伴隨干擾行為紀錄・動態自訂干擾項目・AI 智慧診斷</p>
       </div>
 
       <div class="flex flex-wrap gap-2">
@@ -121,15 +121,21 @@
       </div>
     </div>
 
-    <!-- Week Selector Tabs -->
-    <div class="flex border-b border-[var(--border)] space-x-2">
-      <button id="tabWeek1" onclick="switchWeek(1)" class="px-5 py-3 font-semibold text-sm border-b-2 border-blue-600 text-blue-600 flex items-center gap-2">
-        <span>🗓️ 第一週：觀察期紀錄表</span>
-        <span class="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 px-2 py-0.5 rounded-full">手語圖卡提醒・不立即回應</span>
-      </button>
-      <button id="tabWeek2" onclick="switchWeek(2)" class="px-5 py-3 font-semibold text-sm border-b-2 border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] flex items-center gap-2">
-        <span>⏳ 第二週：介入期紀錄表</span>
-        <span class="text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 px-2 py-0.5 rounded-full">引入計時・約定時間回應</span>
+    <!-- Week Selector Tabs & Add Custom Category Bar -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[var(--border)] gap-2 pb-2">
+      <div class="flex space-x-2">
+        <button id="tabWeek1" onclick="switchWeek(1)" class="px-5 py-3 font-semibold text-sm border-b-2 border-blue-600 text-blue-600 flex items-center gap-2">
+          <span>🗓️ 第一週：觀察期紀錄表</span>
+          <span class="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 px-2 py-0.5 rounded-full">手語圖卡提醒・不立即回應</span>
+        </button>
+        <button id="tabWeek2" onclick="switchWeek(2)" class="px-5 py-3 font-semibold text-sm border-b-2 border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] flex items-center gap-2">
+          <span>⏳ 第二週：介入期紀錄表</span>
+          <span class="text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 px-2 py-0.5 rounded-full">引入計時・約定時間回應</span>
+        </button>
+      </div>
+
+      <button onclick="promptAddNewCategoryItem()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs rounded-xl shadow transition flex items-center gap-1.5 self-end sm:self-auto mb-1">
+        <span>➕ 新增自訂干擾/行為觀察項目</span>
       </button>
     </div>
 
@@ -146,9 +152,16 @@
 
     let currentWeek = 1;
     let customTagsStore = JSON.parse(localStorage.getItem('custom_observation_tags') || '{}');
+    let customCategoryStore = JSON.parse(localStorage.getItem('custom_observation_categories') || '[]');
     let historyRecords = JSON.parse(localStorage.getItem('observation_history_records') || '[]');
 
-    const itemsWeek1 = [
+    // Common co-occurring behaviors for quick tag selection
+    const coOccurringQuickTags = [
+      "摔籃子/甩物品", "大聲嚷嚷/抗議", "敲打桌子", "拉拽他人衣物", 
+      "眼神固著注視", "拒絕配合活動轉換", "擅自離開座位", "推擠周圍同儕", "無伴隨其他干擾"
+    ];
+
+    const baseItemsWeek1 = [
       {
         id: "w1_1",
         title: "1. 社工與他人互動時的干擾",
@@ -177,19 +190,19 @@
         id: "w1_3",
         title: "3. 肢體干擾他人",
         guide: "• 發生前對方做了什麼？是否與社工互動？個案距離多遠？\n• 給予圖卡提示並延遲回應，是否需要多次提醒？\n• 是否停止？停止多久？之後是否再次接近同一人？",
-        tags: ["拍打同儕肩膀", "拉拽他人衣角", "拿走他人工具", "圖卡提示後收手", "需多次圖卡提示", "無肢體衝突", "情緒激動", "冷靜後回座"],
+        tags: ["拍打同儕肩膀", "拉拽他人衣角", "拿走他人工具", "壓住瑕疵金紙/物品", "圖卡提示後收手", "需多次圖卡提示", "無肢體衝突", "情緒激動", "冷靜後回座"],
         fields: [
-          { label: "情境說明", placeholder: "例如：同儕正在收拾金紙工具箱..." },
-          { label: "個案反應", placeholder: "例如：伸手欲拉同儕，提示圖卡後收手..." },
+          { label: "情境說明", placeholder: "例如：個案將面紙蓋上的瑕疵金紙拿走並壓在盒子下方，阻止育萱拿取..." },
+          { label: "個案反應", placeholder: "例如：經支持者說明不可有此行為後，配合理解並返回座位繼續金紙作業..." },
           { label: "等待時間", placeholder: "例如：持續觀察 5 分鐘" },
-          { label: "後續行為", placeholder: "例如：轉向操作個人工具" }
+          { label: "後續行為", placeholder: "例如：全程在旁觀看，配合返回座位繼續進行作業，未再出現干擾" }
         ]
       },
       {
         id: "w1_4",
         title: "4. 接觸或拿取他人物品",
         guide: "• 是否先詢問？是什麼物品？是否主動前往特定位置取得？\n• 提供借用卡／手勢「先問」但暫不給予時，記錄反應。\n• 是否歸還？之後是否再次拿取？",
-        tags: ["未詢問直接拿取", "欲拿取色鉛筆", "欲拿取剪刀/起子", "給予借用卡指引", "出示「先問」圖卡", "主動歸還原處", "可等待授權"],
+        tags: ["未詢問直接拿取", "拿走瑕疵金紙", "欲拿取色鉛筆", "欲拿取剪刀/起子", "給予借用卡指引", "出示「先問」圖卡", "主動歸還原處", "可等待授權"],
         fields: [
           { label: "情境說明", placeholder: "例如：欲拿取鄰桌同學的繪畫色鉛筆..." },
           { label: "個案反應", placeholder: "例如：出示「先問」圖卡，個案收回手..." },
@@ -221,7 +234,7 @@
       }
     ];
 
-    const itemsWeek2 = [
+    const baseItemsWeek2 = [
       {
         id: "w2_1",
         title: "1. 社工與他人互動時的干擾 (計時介入)",
@@ -290,6 +303,25 @@
       }
     ];
 
+    function getCombinedItems(weekNum) {
+      const base = weekNum === 1 ? baseItemsWeek1 : baseItemsWeek2;
+      // Add custom categories added by user
+      const customAdded = customCategoryStore.map((catTitle, idx) => ({
+        id: `custom_cat_${idx+1}`,
+        title: `${base.length + idx + 1}. ${catTitle}`,
+        guide: `• 請紀錄「${catTitle}」發生之情境、個案當下反應、處置方式與後續行為表現。`,
+        tags: ["發生干擾", "口語提醒配合", "圖卡引導配合", "情緒稍焦躁", "順利平息", "冷靜後回座"],
+        fields: [
+          { label: "情境說明", placeholder: "例如：於金紙作業期間發生的干擾情境..." },
+          { label: "個案反應", placeholder: "例如：經工作人員向其說明並提醒後..." },
+          { label: "等待/處理時間", placeholder: "例如：約 2-3 分鐘" },
+          { label: "後續行為表現", placeholder: "例如：配合返座並繼續原本活動" }
+        ]
+      }));
+
+      return [...base, ...customAdded];
+    }
+
     function updateHistoryCount() {
       document.getElementById('historyCount').innerText = historyRecords.length;
     }
@@ -297,12 +329,23 @@
     function renderForm() {
       const container = document.getElementById('formContainer');
       container.innerHTML = '';
-      const items = currentWeek === 1 ? itemsWeek1 : itemsWeek2;
+      const items = getCombinedItems(currentWeek);
 
       items.forEach((item, index) => {
         const card = document.createElement('div');
         card.className = "bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 shadow-sm space-y-4 hover:border-blue-300 dark:hover:border-blue-800 transition";
 
+        // Co-occurring tags HTML
+        let coOccurHTML = '';
+        coOccurringQuickTags.forEach(cTag => {
+          coOccurHTML += `
+            <button type="button" onclick="insertCoOccurringTag('${item.id}', '${cTag}')" class="px-2 py-0.5 text-xs bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded transition">
+              + ${cTag}
+            </button>
+          `;
+        });
+
+        // Fields HTML
         let fieldsHTML = '';
         item.fields.forEach(f => {
           fieldsHTML += `
@@ -339,12 +382,24 @@
               <span class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">${index + 1}</span>
               ${item.title}
             </h3>
-            <span class="text-xs text-[var(--muted-foreground)] bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md">單項追蹤</span>
+            <div class="flex items-center gap-2">
+              <label class="text-xs font-semibold text-blue-600 dark:text-blue-400">⏰ 事件發生時間：</label>
+              <input type="time" id="${item.id}_time" class="px-2.5 py-1 text-xs bg-[var(--background)] border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono">
+            </div>
           </div>
 
           <div class="p-3 bg-amber-500/5 border border-amber-500/20 rounded-xl text-xs text-amber-800 dark:text-amber-300 whitespace-pre-line leading-relaxed">
             <strong>💡 觀察重點說明：</strong>
             ${item.guide}
+          </div>
+
+          <!-- Co-occurring Behaviors Row -->
+          <div class="p-3 bg-rose-500/5 border border-rose-500/20 rounded-xl space-y-1.5">
+            <label class="block text-xs font-bold text-rose-700 dark:text-rose-300">⚡ 同一時間伴隨發生的其他干擾行為（點選快捷帶入）：</label>
+            <div class="flex flex-wrap gap-1.5">
+              ${coOccurHTML}
+            </div>
+            <input type="text" id="${item.id}_co_occur" placeholder="或手動輸入伴隨干擾（例如：伴隨甩籃子、大聲嚷嚷）" class="w-full px-3 py-1.5 text-xs bg-[var(--background)] border border-rose-200 dark:border-rose-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 text-[var(--foreground)]">
           </div>
 
           <div>
@@ -366,7 +421,7 @@
     }
 
     function insertTag(itemId, tagText) {
-      const items = currentWeek === 1 ? itemsWeek1 : itemsWeek2;
+      const items = getCombinedItems(currentWeek);
       const targetItem = items.find(i => i.id === itemId);
       if (targetItem && targetItem.fields.length > 0) {
         const firstFieldId = `${itemId}_${targetItem.fields[0].label}`;
@@ -377,6 +432,17 @@
           } else {
             input.value = `【${tagText}】`;
           }
+        }
+      }
+    }
+
+    function insertCoOccurringTag(itemId, cTag) {
+      const input = document.getElementById(`${itemId}_co_occur`);
+      if (input) {
+        if (input.value) {
+          input.value += `、${cTag}`;
+        } else {
+          input.value = `伴隨干擾：${cTag}`;
         }
       }
     }
@@ -392,6 +458,19 @@
           customTagsStore[itemId].push(trimmed);
           localStorage.setItem('custom_observation_tags', JSON.stringify(customTagsStore));
           renderForm();
+        }
+      }
+    }
+
+    function promptAddNewCategoryItem() {
+      const catTitle = prompt("請輸入欲新增的干擾/行為觀察項目名稱（例如：敲桌拋擲物品、拒絕配合活動轉換、擅自離座走動）：");
+      if (catTitle && catTitle.trim()) {
+        const trimmed = catTitle.trim();
+        if (!customCategoryStore.includes(trimmed)) {
+          customCategoryStore.push(trimmed);
+          localStorage.setItem('custom_observation_categories', JSON.stringify(customCategoryStore));
+          renderForm();
+          alert(`✅ 已成功新增自訂觀察卡片【${trimmed}】！`);
         }
       }
     }
@@ -419,10 +498,14 @@
 
       const records = {};
       let filledCount = 0;
-      const items = currentWeek === 1 ? itemsWeek1 : itemsWeek2;
+      const items = getCombinedItems(currentWeek);
 
       items.forEach(item => {
-        records[item.id] = {};
+        records[item.id] = {
+          time: document.getElementById(`${item.id}_time`) ? document.getElementById(`${item.id}_time`).value : '',
+          coOccur: document.getElementById(`${item.id}_co_occur`) ? document.getElementById(`${item.id}_co_occur`).value : ''
+        };
+
         item.fields.forEach(f => {
           const el = document.getElementById(`${item.id}_${f.label}`);
           const val = el ? el.value : '';
@@ -501,9 +584,15 @@
       switchWeek(target.week);
 
       setTimeout(() => {
-        const items = target.week === 1 ? itemsWeek1 : itemsWeek2;
+        const items = getCombinedItems(target.week);
         items.forEach(item => {
           if (target.records[item.id]) {
+            if (target.records[item.id].time && document.getElementById(`${item.id}_time`)) {
+              document.getElementById(`${item.id}_time`).value = target.records[item.id].time;
+            }
+            if (target.records[item.id].coOccur && document.getElementById(`${item.id}_co_occur`)) {
+              document.getElementById(`${item.id}_co_occur`).value = target.records[item.id].coOccur;
+            }
             item.fields.forEach(f => {
               const el = document.getElementById(`${item.id}_${f.label}`);
               if (el && target.records[item.id][f.label]) {
@@ -548,43 +637,48 @@
     function generateAIAnalysis() {
       const clientName = document.getElementById('clientName').value || '個案';
       const clientHistory = historyRecords.filter(r => r.clientName === clientName);
-
-      // If no history saved yet, also count current active form
       const currentData = gatherFormData();
       const dataset = clientHistory.length > 0 ? clientHistory : [currentData];
 
       document.getElementById('aiReportTitle').innerText = `【${clientName}】觀察與介入跨期 AI 診斷分析報告`;
       document.getElementById('aiReportMeta').innerText = `分析時間：${new Date().toLocaleString()}｜分析數據筆數：${dataset.length} 筆歷史紀錄`;
 
-      let summaryText = "";
-      let trendText = "";
       let strategyText = "";
-      let cautionsList = [];
-
-      // Extract all filled text into analysis string
+      let timeSlots = [];
+      let coOccurBehaviors = [];
       let allText = JSON.stringify(dataset);
 
-      // Check key patterns
+      // Analyze peak time slots
+      dataset.forEach(d => {
+        Object.keys(d.records).forEach(k => {
+          if (d.records[k].time) timeSlots.push(d.records[k].time);
+          if (d.records[k].coOccur) coOccurBehaviors.push(d.records[k].coOccur);
+        });
+      });
+
       if (allText.includes('沙漏') || allText.includes('計時') || allText.includes('碼錶')) {
         strategyText += "• 具體時間工具（沙漏/計時器）對個案效果極佳，能有效將抽象等待轉為視覺化倒數。\n";
       }
       if (allText.includes('圖卡') || allText.includes('手語') || allText.includes('先問')) {
         strategyText += "• 視覺化圖卡（如「先問」卡、「等待」卡）能顯著降低語文指令衝突與情緒焦躁。\n";
       }
-      if (allText.includes('喝水') || allText.includes('寫字') || allText.includes('塗鴉')) {
-        strategyText += "• 提供「喝水/寫字」替代表達選項時，個案能成功轉移注意力並順利度過等待期。\n";
+      if (allText.includes('瑕疵金紙') || allText.includes('拿走他人工具')) {
+        strategyText += "• 針對作業期間「拿走他人工具/金紙」之干擾行為，教保員明確口語說明規範後個案配合度高。\n";
       }
 
       if (!strategyText) {
         strategyText = "• 建議持續搭配手語視覺圖卡與短時數（3-5分鐘）沙漏，協助個案建構穩定等待習慣。\n";
       }
 
-      // Analyze Cautions
-      cautionsList.push(`1. ⚠️ 【空間距離警示】：當社工離個案 1-2 公尺內與他人溝通時最容易觸發尋求注意，請隨身攜帶「等待圖卡」預先提示。`);
-      cautionsList.push(`2. ⏰ 【時間約定具象化】：切勿僅口頭稱「等一下」，必須搭配「計時器/沙漏指針」，否則個案易產生懲罰錯覺而焦躁。`);
-      cautionsList.push(`3. ✂️ 【危險工具防範】：若發現個案接近剪刀/起子等備料工具，務必實施「立即靜音收回」並出示「安全規範卡」，切勿大幅度口頭責備。`);
-      cautionsList.push(`4. 🥤 【情緒過渡替代表達】：當個案無法獲得即時回應時，首選引導至「喝水」或「平板寫字」，其情緒平穩轉換成功率最高。`);
-      cautionsList.push(`5. 🤝 【交接注意事項】：接班工作人員請統一使用「拍手/視覺圖卡」替代身體觸碰，避免觸發個案排斥觸摸之敏感反應。`);
+      let timeAnalysis = timeSlots.length > 0 ? `紀錄顯示事件多集中於 【${timeSlots.join('、')}】 時段，建議於該時段前實施預防性提示。` : "建議於晨間與下午作業轉換時段多加留心。";
+      let coAnalysis = coOccurBehaviors.length > 0 ? `顯著伴隨行為：${coOccurBehaviors.slice(0, 3).join('； ')}。` : "尚未發現高頻率併發性干擾。";
+
+      let cautionsList = [];
+      cautionsList.push(`1. ⏰ 【高風險時段與伴隨行為】：${timeAnalysis} ${coAnalysis}`);
+      cautionsList.push(`2. ⚠️ 【空間距離警示】：當社工離個案 1-2 公尺內與他人溝通時最容易觸發尋求注意，請隨身攜帶「等待圖卡」預先提示。`);
+      cautionsList.push(`3. ⏳ 【時間約定具象化】：切勿僅口頭稱「等一下」，必須搭配「計時器/沙漏指針」，否則個案易產生懲罰錯覺而焦躁。`);
+      cautionsList.push(`4. ✂️ 【危險工具與同儕防範】：若發生拿走他人工具/瑕疵金紙狀況，請立即安撫同儕，並透過明確原則說明引導返座。`);
+      cautionsList.push(`5. 🤝 【交接注意事項】：接班工作人員請統一使用「視覺圖卡/文字」替代身體觸碰，避免觸發個案排斥觸摸之敏感反應。`);
 
       const contentBox = document.getElementById('aiReportContent');
       contentBox.innerHTML = `
